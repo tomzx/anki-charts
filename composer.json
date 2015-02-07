@@ -1,0 +1,61 @@
+{
+	"name": "tomzx/anki-charts",
+	"description": "Analyze your anki data in depth",
+	"keywords": [
+		"anki",
+		"charts"
+	],
+	"homepage": "https://github.com/tomzx/anki-charts",
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "Tom Rochette",
+			"email": "tom@tomrochette.com",
+			"homepage": "http://www.tomrochette.com"
+		}
+	],
+	"support": {
+		"issues": "https://github.com/tomzx/anki-charts/issues"
+	},
+	"require": {
+		"php": ">=5.4.0",
+
+		"laravel/framework": "4.2.*",
+		"barryvdh/laravel-debugbar": "~1.7"
+	},
+	"require-dev": {
+		"phpunit/phpunit": "~4"
+	},
+	"autoload": {
+		"classmap": [
+			"app/commands",
+			"app/controllers",
+			"app/models",
+			"app/database/migrations",
+			"app/database/seeds",
+			"app/tests/TestCase.php"
+		]
+	},
+	"scripts": {
+		"post-install-cmd": [
+			"php artisan clear-compiled",
+			"php artisan optimize"
+		],
+		"post-update-cmd": [
+			"php artisan clear-compiled",
+			"php artisan optimize"
+		],
+		"post-create-project-cmd": [
+			"php artisan key:generate"
+		]
+	},
+	"config": {
+		"preferred-install": "dist"
+	},
+	"minimum-stability": "stable",
+	"extra": {
+		"branch-alias": {
+			"dev-master": "0.1-dev"
+		}
+	}
+}
