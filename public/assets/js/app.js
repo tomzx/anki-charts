@@ -1,7 +1,7 @@
-$(function () {
+$(function() {
 	Number.prototype.round = function(places) {
-		return +(Math.round(this + "e+" + places)  + "e-" + places);
-	}
+		return +(Math.round(this + "e+" + places) + "e-" + places);
+	};
 
 	var graphHandlers = {};
 
@@ -205,12 +205,6 @@ $(function () {
 	};
 
 	graphHandlers['review-time'] = function(data) {
-		//$('.review-time').highcharts({
-		//	title: {
-		//		text: 'Review Time',
-		//	},
-		//});
-
 		var cumulativeYoung = [];
 		var cumulativeMature = [];
 		var cumulativeRelearn = [];
@@ -418,7 +412,6 @@ $(function () {
 	};
 
 	graphHandlers['cards-types'] = function(data) {
-		
 		var $element = $('.cards-types');
 
 		if ($element.highcharts()) {
@@ -516,7 +509,7 @@ $(function () {
 		var total = sum;
 
 		var series = _.map(data, function(item) {
-			var result = [item.duration, (sum/total*100).round(2)];
+			var result = [item.duration, (sum / total * 100).round(2)];
 			sum -= item.count;
 			return result;
 		});
@@ -570,7 +563,7 @@ $(function () {
 
 		var series = _.map(data, function(item) {
 			return {
-				name: 'cid: '+ item[0].cid,
+				name: 'cid: ' + item[0].cid,
 				data: _.map(item, function(itemData) {
 					return itemData.interval;
 				})
@@ -658,9 +651,9 @@ $(function () {
 						enabled: true,
 						format: '{series.name}'
 						/*color: (Highcharts.theme && Highcharts.theme.dataLabelsColor) || 'white',
-						style: {
-							textShadow: '0 0 3px black, 0 0 3px black'
-						},*/
+						 style: {
+						 textShadow: '0 0 3px black, 0 0 3px black'
+						 },*/
 					},
 				},
 			},
@@ -704,8 +697,8 @@ $(function () {
 
 		var value = 0;
 		animateInterval = setInterval(function() {
-			$('#from').val((value+30)+' days ago').change();
-			$('#to').val(value+' days ago').change();
+			$('#from').val((value + 30) + ' days ago').change();
+			$('#to').val(value + ' days ago').change();
 			++value;
 		}, 1000);
 	});

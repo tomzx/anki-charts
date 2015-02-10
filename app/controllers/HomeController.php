@@ -31,11 +31,6 @@ class HomeController extends BaseController {
 
 	private function whereDecks($query, array $decks)
 	{
-		/*return $query->whereIn('cid', function($query) use ($decks) {
-			$query->select('id')
-				->from('cards')
-				->whereIn('did', $decks);
-		});*/
 		return $query
 		->join('cards', 'revlog.cid', '=', 'cards.id')
 		->whereIn('did', $decks);
@@ -76,21 +71,6 @@ class HomeController extends BaseController {
 
 		/* @var $collection Collection */
 		$collection = Collection::first();
-
-		//$startHour = date('H', $collection->getCreationTime());
-		//$from = $from ? $from->setTime($startHour, 0) : null;
-		//$to = $to ? $to->setTime($startHour, 0) : null;
-
-		// TODO: Check if this is necessary <tom@tomrochette.com>
-//		$from = $from ? $collection->dayStart($from) : null;
-//		$to = $to ? $collection->dayStart($to) : null;
-//
-//		if ($from === null && $to === null && $date) {
-//			//$from = $date->copy()->setTime($startHour, 0);
-//			//$to = $date->copy()->addDay()->setTime($startHour, 0);
-//			$from = $collection->dayStart($date);
-//			$to = $collection->dayStart($date->copy()->addDay());
-//		}
 
 		$decks = Input::get('decks');
 		if ($decks) {
@@ -151,8 +131,9 @@ class HomeController extends BaseController {
 		$this->whereFromTo($query, $from, $to);
 		$this->whereDecks($query, $decks);
 
+		$matureInterval = 21;
 		$result = $query
-			->where('lastIvl', '>=', 21)// TODO: What is this magic number? <tom@tomrochette.com>
+			->where('lastIvl', '>=', $matureInterval)
 			->first();
 
 		if ($result->mature_count) {
@@ -180,7 +161,6 @@ class HomeController extends BaseController {
 
 		$query = DB::table('cards')
 			->select(
-				//DB::raw('(due-:today)/'.$chunk.' as day'),
 				DB::raw('(due-'.$daysSinceCreation.'/'.$chunk.') as period'),
 				DB::raw('sum(case when ivl < 21 then 1 else 0 end) as young'),
 				DB::raw('sum(case when ivl >= 21 then 1 else 0 end) as mature')
@@ -201,7 +181,6 @@ class HomeController extends BaseController {
 
 		$results = $query->get();
 
-		// Force mapping to proper types
 		foreach ($results as $key => $result) {
 			$result->period = (int)$result->period;
 			$result->young = (int)$result->young;
@@ -209,14 +188,6 @@ class HomeController extends BaseController {
 		}
 
 		return $results;
-
-//select (due-:today)/:chunk as day,
-//sum(case when ivl < 21 then 1 else 0 end), -- yng
-//sum(case when ivl >= 21 then 1 else 0 end) -- mtr
-//from cards
-//where did in %s and queue in (2,3)
-//	%s
-//group by day order by day
 	}
 
 	public function reviewCount()
@@ -231,22 +202,22 @@ class HomeController extends BaseController {
 
 		$query = DB::table('revlog')
 			->select(
-				DB::raw('(cast((id/1000.0 - '.$cut.') / 86400.0 as int))/'.$chunk.' as period'),
-				DB::raw('sum(case when type = 0 then 1 else 0 end) as learn_count'), //-- lrn count
-				DB::raw('sum(case when type = 1 and lastIvl < 21 then 1 else 0 end) as young_count'), //-- yng count
-				DB::raw('sum(case when type = 1 and lastIvl >= 21 then 1 else 0 end) as mature_count'), //-- mtr count
-				DB::raw('sum(case when type = 2 then 1 else 0 end) as lapse_count'), //-- lapse count
-				DB::raw('sum(case when type = 3 then 1 else 0 end) as cram_count'), //-- cram count
-				DB::raw('sum(case when type = 0 then time/1000.0 else 0 end)/'.$period.' as learn_time'), //-- lrn time
-				DB::raw('sum(case when type = 1 and lastIvl < 21 then time/1000.0 else 0 end)/'.$period.' as young_time'), // yng time
-				DB::raw('sum(case when type = 1 and lastIvl >= 21 then time/1000.0 else 0 end)/'.$period.' as mature_time'), // mtr time
-				DB::raw('sum(case when type = 2 then time/1000.0 else 0 end)/'.$period.' as lapse_time'),// -- lapse time
-				DB::raw('sum(case when type = 3 then time/1000.0 else 0 end)/'.$period.' as cram_time')// -- cram time
+				DB::raw('(cast((revlog.id/1000.0 - '.$cut.') / 86400.0 as int))/'.$chunk.' as period'),
+				DB::raw('sum(case when revlog.type = 0 then 1 else 0 end) as learn_count'), //-- lrn count
+				DB::raw('sum(case when revlog.type = 1 and revlog.lastIvl < 21 then 1 else 0 end) as young_count'), //-- yng count
+				DB::raw('sum(case when revlog.type = 1 and revlog.lastIvl >= 21 then 1 else 0 end) as mature_count'), //-- mtr count
+				DB::raw('sum(case when revlog.type = 2 then 1 else 0 end) as lapse_count'), //-- lapse count
+				DB::raw('sum(case when revlog.type = 3 then 1 else 0 end) as cram_count'), //-- cram count
+				DB::raw('sum(case when revlog.type = 0 then time/1000.0 else 0 end)/'.$period.' as learn_time'), //-- lrn time
+				DB::raw('sum(case when revlog.type = 1 and revlog.lastIvl < 21 then time/1000.0 else 0 end)/'.$period.' as young_time'), // yng time
+				DB::raw('sum(case when revlog.type = 1 and revlog.lastIvl >= 21 then time/1000.0 else 0 end)/'.$period.' as mature_time'), // mtr time
+				DB::raw('sum(case when revlog.type = 2 then time/1000.0 else 0 end)/'.$period.' as lapse_time'),// -- lapse time
+				DB::raw('sum(case when revlog.type = 3 then time/1000.0 else 0 end)/'.$period.' as cram_time')// -- cram time
 			)
 			->groupBy('period')
 			->orderBy('period');
-			// TODO-TR: filter by deck
 
+		$this->whereMyDecks($query);
 		$this->whereFromTo($query, $this->from, $this->to);
 
 		$results = $query->get();
@@ -258,11 +229,11 @@ class HomeController extends BaseController {
 			$result->mature_count = (int)$result->mature_count;
 			$result->lapse_count = (int)$result->lapse_count;
 			$result->cram_count = (int)$result->cram_count;
-			$result->learn_time = (double)$result->learn_time;
-			$result->young_time = (double)$result->young_time;
-			$result->mature_time = (double)$result->mature_time;
-			$result->lapse_time = (double)$result->lapse_time;
-			$result->cram_time = (double)$result->cram_time;
+			$result->learn_time = (int)$result->learn_time;
+			$result->young_time = (int)$result->young_time;
+			$result->mature_time = (int)$result->mature_time;
+			$result->lapse_time = (int)$result->lapse_time;
+			$result->cram_time = (int)$result->cram_time;
 		}
 
 		return $results;
@@ -285,7 +256,6 @@ class HomeController extends BaseController {
 
 	public function answerButtons()
 	{
-		//var_dump($this->eases());
 		return Response::json($this->eases());
 	}
 
@@ -334,14 +304,6 @@ class HomeController extends BaseController {
 
 	public function reviewDistribution()
 	{
-//SELECT x, cid, count(x) FROM (
-//SELECT COUNT("cid") as x, cid
-//FROM "revlog"
-//GROUP BY cid) as countX
-//GROUP BY x
-
-		//var_dump($this->reviewDistributionQuery());
-
 		return Response::json($this->reviewDistributionQuery());
 	}
 
@@ -381,45 +343,26 @@ class HomeController extends BaseController {
 
 	public function forgettingCurve()
 	{
-		//var_dump($this->forgettingCurveQuery());return;
 		return Response::json($this->forgettingCurveQuery());
 	}
 
 	protected function forgettingCurveQuery()
 	{
-		/*$subQuery = $this->whereMyDecks(DB::table('revlog')
-				->select(
-					DB::raw('min(revlog.id) as min'),
-					DB::raw('max(revlog.id) as max'),
-					'revlog.cid'
-				)
-		)
-			->groupBy('cid');
-
-		$results = DB::table(
-			DB::raw('('.$subQuery->toSql().') as subQuery')
-		)
-			->select(
-				DB::raw('(max - min) / (24*60*60*1000) as duration'),
-				DB::raw('count(1) as count')
-			)
-			->groupBy('duration')
-			->orderBy('duration')
-			->mergeBindings($subQuery)
-			->get();*/
-
 		$from = $this->from;
 		$to = $this->to;
 
-		$query = DB::table('cards')
+		$query = DB::table('revlog')
 			->select(
-				'cards.ivl as duration',
+				'revlog.lastIvl as duration',
 				DB::raw('count(1) as count')
 			)
 			->whereIn('did', $this->myDecks())
-			->join('revlog', 'revlog.cid', '=', 'cards.id')
-			->groupBy('cards.ivl')
-			->orderBy('cards.ivl');
+			->where('revlog.ease', '=', 1) // again => forgot
+			->where('revlog.lastIvl', '>=', 0) // ignore cards not learned yet
+			->join('cards', 'revlog.cid', '=', 'cards.id')
+			->groupBy('revlog.lastIvl')
+			->orderBy('revlog.lastIvl');
+
 
 		$this->whereFromTo($query, $from, $to);
 
@@ -448,7 +391,6 @@ class HomeController extends BaseController {
 			->where('revlog.ivl', '>', 0)
 			->join('cards', 'revlog.cid', '=', 'cards.id')
 			->whereIn('did', $this->myDecks())
-//			->where('cid', '=', '1333728761075')
 			->orderBy('revlog.cid')
 			->orderBy('revlog.id')
 			->get();
@@ -460,19 +402,11 @@ class HomeController extends BaseController {
 		$results = new \Illuminate\Support\Collection($results);
 		$results = $results->groupBy('cid');
 
-
 		return $results;
 	}
 
 	public function tags()
 	{
-		// return an array of the following
-//		{
-//			tag: tag_name,
-//			count: card/note count,
-//			value: average ease
-//		}
-//		$results = [];
 		$results = Cache::rememberForever('tags', function() {
 			$collection = Collection::first();
 
@@ -503,8 +437,6 @@ class HomeController extends BaseController {
 
 			return $results;
 		});
-
-		//var_dump($results);
 
 		return Response::json($results);
 	}
