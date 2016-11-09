@@ -14,8 +14,9 @@ Anki charts is a small laravel application that allows you to inspect into furth
 
 1. Get the project, either via `git clone`, `php composer.phar create-project tomzx/anki-charts` or by downloading a release.
 2. Copy/symlink your `collection.anki2` to `app/database/collection.anki2`.
-3. Make your server point to the `public` folder like a regular laravel install.
-4. Analyze your data!
+3. Configure your decks in `app/config/anki.php`.
+4. Make your server point to the `public` folder like a regular laravel install.
+5. Analyze your data!
 
 ## License
 

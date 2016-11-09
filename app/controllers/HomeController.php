@@ -1,7 +1,7 @@
 <?php
 
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 
 class HomeController extends BaseController {
@@ -19,14 +19,7 @@ class HomeController extends BaseController {
 
 	private function myDecks()
 	{
-		return [
-			1407642619270,
-			1407901391136,
-			1407643678544,
-			1407643312084,
-			1407643013277,
-			1407817722434,
-		];
+		return Config::get('anki.decks');
 	}
 
 	private function whereDecks($query, array $decks)
@@ -407,36 +400,32 @@ class HomeController extends BaseController {
 
 	public function tags()
 	{
-		$results = Cache::rememberForever('tags', function() {
-			$collection = Collection::first();
+		$collection = Collection::first();
 
-			// Get all tags
-			$tags = $collection->getTags();
-			// Find how many are in the specified decks
-			foreach ($tags as $tag) {
-				$q = DB::table('cards')
-					->select(
-						DB::raw('count() as cards_count'),
-						DB::raw('avg(ivl) as average_interval')
-					)
-					->join('notes', 'cards.nid', '=', 'notes.id')
-					->where('tags', 'like', '%'.$tag.'%')
-					->whereIn('did', $this->myDecks())
-					->first();
+		// Get all tags
+		$tags = $collection->getTags();
+		// Find how many are in the specified decks
+		foreach ($tags as $tag) {
+			$q = DB::table('cards')
+				->select(
+					DB::raw('count() as cards_count'),
+					DB::raw('avg(ivl) as average_interval')
+				)
+				->join('notes', 'cards.nid', '=', 'notes.id')
+				->where('tags', 'like', '%'.$tag.'%')
+				->whereIn('did', $this->myDecks())
+				->first();
 
-				if ((int)$q->cards_count === 0) {
-					continue;
-				}
-
-				$results[$tag] = [
-					'tag' => $tag,
-					'count' => (int)$q->cards_count,
-					'value' => round($q->average_interval, 1),
-				];
+			if ((int)$q->cards_count === 0) {
+				continue;
 			}
 
-			return $results;
-		});
+			$results[$tag] = [
+				'tag' => $tag,
+				'count' => (int)$q->cards_count,
+				'value' => round($q->average_interval, 1),
+			];
+		}
 
 		return Response::json($results);
 	}
