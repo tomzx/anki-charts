@@ -1,9 +1,5 @@
 <?php
 
-function secondsToTime($seconds) {
-	return gmdate('H\hi\ms\s', $seconds % (24*60*60));
-}
-
 Route::get('/', function()
 {
 	return View::make('hello');
